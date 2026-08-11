@@ -1,0 +1,57 @@
+# GoLand / JetBrains
+.idea/
+*.iml
+*.iws
+
+# Go build artefacts
+/bin/
+/dist/
+/build/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go tooling and coverage
+coverage.out
+coverage.html
+*.prof
+
+# Local Go workspace files
+go.work
+go.work.sum
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Operating system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+
+# Editor swap and backup files
+*.swp
+*.swo
+*~
+.vscode/
+
+# Generated project-specific data
+/data/
+/cache/
