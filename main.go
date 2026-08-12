@@ -46,9 +46,7 @@ type WeatherResponse struct {
 func main() {
 	fmt.Println("---------------------- Weather CLI ----------------------")
 
-	// TODO Wetter API und sich einfach wetter von einer vorbestimmten Stadt zu holen
-	// TODO Automatisch überm Standort die Stadt bestimmen?
-	// TODO über Args eine Stadt bestimmen lassen?
+	// TODO Bessere Angaben wie das Wetter ist: Regen, Wolken etc
 
 	err := godotenv.Load()
 	if err != nil {
