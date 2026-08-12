@@ -34,13 +34,32 @@ type GeoapifyResult struct {
 }
 
 type WeatherResponse struct {
-	Current struct {
-		Temperature float64 `json:"temperature_2m"`
-	} `json:"current"`
-	Hourly struct {
-		Time        []string  `json:"time"`
-		Temperature []float64 `json:"temperature_2m"`
-	} `json:"hourly"`
+	Current Current `json:"current"`
+	Hourly  Hourly  `json:"hourly"`
+}
+
+type Hourly struct {
+	Time                     []string  `json:"time"`
+	Temperature              []float64 `json:"temperature_2m"`
+	RelativeHumidity         []float64 `json:"relative_humidity_2m"`
+	ApparentTemperature      []float64 `json:"apparent_temperature"`
+	PrecipitationProbability []float64 `json:"precipitation_probability"`
+	Precipitation            []float64 `json:"precipitation"`
+	Rain                     []float64 `json:"rain"`
+	Showers                  []float64 `json:"showers"`
+	Snowfall                 []float64 `json:"snowfall"`
+	WeatherCode              []int     `json:"weather_code"`
+	CloudCover               []float64 `json:"cloud_cover"`
+	WindSpeed10m             []float64 `json:"wind_speed_10m"`
+	WindDirection10m         []float64 `json:"wind_direction_10m"`
+	WindGusts10m             []float64 `json:"wind_gusts_10m"`
+}
+
+type Current struct {
+	Temperature              float64 `json:"temperature_2m"`
+	RelativeHumidity         float64 `json:"relative_humidity_2m"`
+	ApparentTemperature      float64 `json:"apparent_temperature"`
+	PrecipitationProbability float64 `json:"precipitation_probability"`
 }
 
 func main() {
@@ -163,13 +182,18 @@ func main() {
 		return
 	}
 
-	fmt.Println(string(body))
+	fmt.Println("Weather data fetched\n")
+
+	fmt.Println("Weather for the next 24 hours:")
 
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(body, &weatherResponse)
 	fmt.Printf("Current temperature: %v°C\n", weatherResponse.Current.Temperature)
 	for key, time := range weatherResponse.Hourly.Time {
-		fmt.Printf("%v: %v, %v °C\n", key, time, weatherResponse.Hourly.Temperature[key])
+
+		splitTime := strings.SplitN(time, "T", 2)
+
+		fmt.Printf("%v, %v°C\n", splitTime[1], weatherResponse.Hourly.Temperature[key])
 
 	}
 
