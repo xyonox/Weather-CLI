@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&current=temperature_2m"
+	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&forecast_hours=24&timezone=auto"
 	LocationApiServer                = "https://api.geoapify.com/v1/geocode/search?text=%v&format=json&apiKey=%v"
 	LocationApiServerWithCountryCode = "https://api.geoapify.com/v1/geocode/search?text=%v&filter=countrycode:%v&format=json&apiKey=%v"
 )
@@ -31,6 +31,16 @@ type GeoapifyResult struct {
 	Latitude         float64 `json:"lat"`
 	Longitude        float64 `json:"lon"`
 	FormattedAddress string  `json:"formatted"`
+}
+
+type WeatherResponse struct {
+	Current struct {
+		Temperature float64 `json:"temperature_2m"`
+	} `json:"current"`
+	Hourly struct {
+		Time        []string  `json:"time"`
+		Temperature []float64 `json:"temperature_2m"`
+	} `json:"hourly"`
 }
 
 func main() {
@@ -61,7 +71,7 @@ func main() {
 
 	input := strings.TrimSpace(scanner.Text())
 
-	fmt.Println("Searching for: ", input)
+	fmt.Printf("\nSearching for: %v\n\n", input)
 
 	splits := strings.SplitN(strings.ToLower(input), ", ", 2)
 
@@ -131,6 +141,8 @@ func main() {
 
 	url := fmt.Sprintf(WeatherApiServer, finallyResult.Latitude, finallyResult.Longitude)
 
+	fmt.Println(url)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err)
@@ -154,6 +166,14 @@ func main() {
 	}
 
 	fmt.Println(string(body))
+
+	var weatherResponse WeatherResponse
+	err = json.Unmarshal(body, &weatherResponse)
+	fmt.Printf("Current temperature: %v°C\n", weatherResponse.Current.Temperature)
+	for key, time := range weatherResponse.Hourly.Time {
+		fmt.Printf("%v: %v, %v °C\n", key, time, weatherResponse.Hourly.Temperature[key])
+
+	}
 
 	fmt.Println("---------------------------------------------------------")
 }
