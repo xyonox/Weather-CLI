@@ -56,16 +56,74 @@ type Hourly struct {
 }
 
 type Current struct {
-	Temperature              float64 `json:"temperature_2m"`
-	RelativeHumidity         float64 `json:"relative_humidity_2m"`
-	ApparentTemperature      float64 `json:"apparent_temperature"`
-	PrecipitationProbability float64 `json:"precipitation_probability"`
+	Time                string  `json:"time"`
+	Interval            int     `json:"interval"`
+	Temperature         float64 `json:"temperature_2m"`
+	RelativeHumidity    float64 `json:"relative_humidity_2m"`
+	ApparentTemperature float64 `json:"apparent_temperature"`
+	Precipitation       float64 `json:"precipitation"`
+	WeatherCode         int     `json:"weather_code"`
+	CloudCover          float64 `json:"cloud_cover"`
+	WindSpeed10m        float64 `json:"wind_speed_10m"`
+	WindDirection10m    float64 `json:"wind_direction_10m"`
+	WindGusts10m        float64 `json:"wind_gusts_10m"`
+}
+
+func formatTime(value string) string {
+	return strings.Replace(value, "T", " ", 1)
+}
+
+func (c Current) String() string {
+	return fmt.Sprintf(
+		"Aktuell (%s)\n"+
+			"  Aktualisierung: %d s\n"+
+			"  Temperatur: %5.1f °C (gefühlt %5.1f °C)\n"+
+			"  Luftfeuchtigkeit: %3.0f %%\n"+
+			"  Niederschlag: %4.2f mm\n"+
+			"  Wettercode: WMO %d\n"+
+			"  Bewölkung: %3.0f %%\n"+
+			"  Wind: %4.1f km/h aus %3.0f° (Böen %4.1f km/h)",
+		formatTime(c.Time), c.Interval, c.Temperature, c.ApparentTemperature,
+		c.RelativeHumidity, c.Precipitation, c.WeatherCode, c.CloudCover,
+		c.WindSpeed10m, c.WindDirection10m, c.WindGusts10m,
+	)
+}
+
+func (h Hourly) String() string {
+	var result strings.Builder
+	result.WriteString("Vorhersage\n")
+	result.WriteString("Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag                 Wetter                                                Wind\n")
+	result.WriteString("──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n")
+
+	for i, time := range h.Time {
+		result.WriteString(fmt.Sprintf("%-17s %4.1f °C (gefühlt %4.1f °C)  %3.0f %%      %3.0f %%      %4.2f mm (Regen %4.2f, Schauer %4.2f, Schnee %4.2f cm)  WMO %3d, Wolken %3.0f %%  %4.1f km/h aus %3.0f° (Böen %4.1f km/h)\n",
+			formatTime(time), valueAt(h.Temperature, i), valueAt(h.ApparentTemperature, i),
+			valueAt(h.RelativeHumidity, i), valueAt(h.PrecipitationProbability, i),
+			valueAt(h.Precipitation, i), valueAt(h.Rain, i), valueAt(h.Showers, i),
+			valueAt(h.Snowfall, i), intAt(h.WeatherCode, i),
+			valueAt(h.CloudCover, i), valueAt(h.WindSpeed10m, i), valueAt(h.WindDirection10m, i),
+			valueAt(h.WindGusts10m, i)))
+	}
+
+	return strings.TrimSuffix(result.String(), "\n")
+}
+
+func valueAt(values []float64, index int) float64 {
+	if index >= 0 && index < len(values) {
+		return values[index]
+	}
+	return 0
+}
+
+func intAt(values []int, index int) int {
+	if index >= 0 && index < len(values) {
+		return values[index]
+	}
+	return 0
 }
 
 func main() {
 	fmt.Println("---------------------- Weather CLI ----------------------")
-
-	// TODO Bessere Angaben wie das Wetter ist: Regen, Wolken etc
 
 	err := godotenv.Load()
 	if err != nil {
@@ -184,18 +242,11 @@ func main() {
 
 	fmt.Println("Weather data fetched\n")
 
-	fmt.Println("Weather for the next 24 hours:")
-
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(body, &weatherResponse)
-	fmt.Printf("Current temperature: %v°C\n", weatherResponse.Current.Temperature)
-	for key, time := range weatherResponse.Hourly.Time {
-
-		splitTime := strings.SplitN(time, "T", 2)
-
-		fmt.Printf("%v, %v°C\n", splitTime[1], weatherResponse.Hourly.Temperature[key])
-
-	}
+	fmt.Println(weatherResponse.Current)
+	fmt.Println()
+	fmt.Println(weatherResponse.Hourly)
 
 	fmt.Println("---------------------------------------------------------")
 }
