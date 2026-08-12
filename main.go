@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=48.1374&longitude=11.5755&current=temperature_2m"
+	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&current=temperature_2m"
 	LocationApiServer                = "https://api.geoapify.com/v1/geocode/search?text=%v&format=json&apiKey=%v"
 	LocationApiServerWithCountryCode = "https://api.geoapify.com/v1/geocode/search?text=%v&filter=countrycode:%v&format=json&apiKey=%v"
 )
@@ -129,7 +129,9 @@ func main() {
 
 	fmt.Println("Searching for weather:")
 
-	resp, err := http.Get(WeatherApiServer)
+	url := fmt.Sprintf(WeatherApiServer, finallyResult.Latitude, finallyResult.Longitude)
+
+	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Println(err)
 		return
