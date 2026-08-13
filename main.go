@@ -82,11 +82,11 @@ func (c Current) String() string {
 			"  Temperatur: %5.1f °C (gefühlt %5.1f °C)\n"+
 			"  Luftfeuchtigkeit: %3.0f %%\n"+
 			"  Niederschlag: %4.2f mm\n"+
-			"  Wettercode: WMO %d\n"+
+			"  Wetter: %s (WMO %d)\n"+
 			"  Bewölkung: %3.0f %%\n"+
 			"  Wind: %4.1f km/h aus %3.0f° (Böen %4.1f km/h)",
 		formatTime(c.Time), c.Interval, c.Temperature, c.ApparentTemperature,
-		c.RelativeHumidity, c.Precipitation, c.WeatherCode, c.CloudCover,
+		c.RelativeHumidity, c.Precipitation, weatherDescription(c.WeatherCode), c.WeatherCode, c.CloudCover,
 		c.WindSpeed10m, c.WindDirection10m, c.WindGusts10m,
 	)
 }
@@ -94,20 +94,41 @@ func (c Current) String() string {
 func (h Hourly) String() string {
 	var result strings.Builder
 	result.WriteString("Vorhersage\n")
-	result.WriteString("Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag                 Wetter                                                Wind\n")
+	result.WriteString("Zeit              Temperatur                 Feuchte  Regenwahrsch.  Niederschlag                                      Wetter        Wolken   Wind\n")
 	result.WriteString("──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────\n")
 
 	for i, time := range h.Time {
-		result.WriteString(fmt.Sprintf("%-17s %4.1f °C (gefühlt %4.1f °C)  %3.0f %%      %3.0f %%      %4.2f mm (Regen %4.2f, Schauer %4.2f, Schnee %4.2f cm)  WMO %3d, Wolken %3.0f %%  %4.1f km/h aus %3.0f° (Böen %4.1f km/h)\n",
+		result.WriteString(fmt.Sprintf("%-17s %4.1f °C (gefühlt %4.1f °C)  %3.0f %%      %3.0f %%      %4.2f mm (Regen %4.2f, Schauer %4.2f, Schnee %4.2f cm)  %-12s %3.0f %%  Wind %4.1f km/h aus %3.0f° (Böen %4.1f km/h)\n",
 			formatTime(time), valueAt(h.Temperature, i), valueAt(h.ApparentTemperature, i),
 			valueAt(h.RelativeHumidity, i), valueAt(h.PrecipitationProbability, i),
 			valueAt(h.Precipitation, i), valueAt(h.Rain, i), valueAt(h.Showers, i),
-			valueAt(h.Snowfall, i), intAt(h.WeatherCode, i),
+			valueAt(h.Snowfall, i), weatherDescription(intAt(h.WeatherCode, i)),
 			valueAt(h.CloudCover, i), valueAt(h.WindSpeed10m, i), valueAt(h.WindDirection10m, i),
 			valueAt(h.WindGusts10m, i)))
 	}
 
 	return strings.TrimSuffix(result.String(), "\n")
+}
+
+func weatherDescription(code int) string {
+	switch code {
+	case 0:
+		return "Sonnenschein"
+	case 1, 2, 3:
+		return "Bewölkt"
+	case 45, 48:
+		return "Nebel"
+	case 51, 53, 55, 56, 57, 61, 63, 65, 66, 67:
+		return "Regen"
+	case 71, 73, 75, 77, 85, 86:
+		return "Schnee"
+	case 80, 81, 82:
+		return "Schauer"
+	case 95, 96, 99:
+		return "Gewitter"
+	default:
+		return "Unbekannt"
+	}
 }
 
 func valueAt(values []float64, index int) float64 {
@@ -212,15 +233,15 @@ func main() {
 		return
 	}
 
-	err = geoResponse.Body.Close()
-	if err != nil {
-		return
-	}
-
 	geoBody, err := io.ReadAll(geoResponse.Body)
 
 	if err != nil {
 		fmt.Println(err)
+		return
+	}
+
+	err = geoResponse.Body.Close()
+	if err != nil {
 		return
 	}
 
