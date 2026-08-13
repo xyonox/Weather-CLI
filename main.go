@@ -137,6 +137,11 @@ func main() {
 	fmt.Println("Hours: ", *hoursToShow)
 	fmt.Println("Country: ", *countryCode)
 
+	if *hoursToShow < 0 || *hoursToShow > 24*7 {
+		fmt.Println("Invalid number of hours")
+		return
+	}
+
 	fmt.Println("---------------------- Weather CLI ----------------------")
 
 	err := godotenv.Load()
@@ -149,35 +154,39 @@ func main() {
 		return
 	}
 
+	scanner := bufio.NewScanner(os.Stdin)
+
 	var input string
 	var splits []string
 
-	if *location != "" {
+	if *location == "" {
+		fmt.Println("Enter a location: ")
+		fmt.Print("> ")
 
+		if !scanner.Scan() {
+			fmt.Println("No input")
+			return
+		}
+
+		input = strings.TrimSpace(scanner.Text())
+
+		fmt.Printf("\nSearching for: %v\n\n", input)
+
+		splits = strings.SplitN(strings.ToLower(input), ", ", 2)
+
+		if len(splits) == 2 {
+			*countryCode = strings.ToUpper(splits[0])
+			*location = strings.TrimSpace(splits[1])
+		} else {
+			*location = strings.TrimSpace(input)
+		}
 	}
-
-	fmt.Println("Enter a location: ")
-	fmt.Print("> ")
-	scanner := bufio.NewScanner(os.Stdin)
-
-	if !scanner.Scan() {
-		fmt.Println("No input")
-		return
-	}
-
-	input = strings.TrimSpace(scanner.Text())
-
-	fmt.Printf("\nSearching for: %v\n\n", input)
-
-	splits = strings.SplitN(strings.ToLower(input), ", ", 2)
-
-	*countryCode = strings.ToUpper(splits[0])
-	*location = strings.TrimSpace(splits[1])
 
 	var geoRespone *http.Response
 
-	if len(splits) == 2 {
-		url := fmt.Sprintf(LocationApiServerWithCountryCode, splits[1], splits[0], os.Getenv("GEOAPIFY_API_KEY"))
+	if len(splits) == 2 || *countryCode != "" {
+		url := fmt.Sprintf(LocationApiServerWithCountryCode, *location, *countryCode, os.Getenv("GEOAPIFY_API_KEY"))
+		fmt.Println(url)
 		geoRespone, err = http.Get(url)
 		if err != nil {
 			fmt.Println(err)
@@ -185,7 +194,7 @@ func main() {
 		}
 
 	} else {
-		url := fmt.Sprintf(LocationApiServer, input, os.Getenv("GEOAPIFY_API_KEY"))
+		url := fmt.Sprintf(LocationApiServer, *location, os.Getenv("GEOAPIFY_API_KEY"))
 		geoRespone, err = http.Get(url)
 		if err != nil {
 			fmt.Println(err)
@@ -194,6 +203,13 @@ func main() {
 	}
 
 	geoBody, err := io.ReadAll(geoRespone.Body)
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(geoRespone.Body)
+
 	if err != nil {
 		fmt.Println(err)
 		return
