@@ -133,7 +133,7 @@ Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag         
 ├── main.go       # CLI, API clients, data types and Stringer implementations
 ├── go.mod        # Go module definition
 ├── go.sum        # Dependency checksums
-├── .env       # API Key
+├── .env          # API Key
 └── README.md     # Project documentation
 ```
 
