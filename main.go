@@ -294,8 +294,6 @@ func main() {
 		*hoursToShow,
 	)
 
-	fmt.Println(weatherUrl)
-
 	resp, err := http.Get(weatherUrl)
 	if err != nil {
 		fmt.Println(err)
@@ -308,9 +306,6 @@ func main() {
 		}
 		return
 	}(resp.Body)
-
-	fmt.Println(resp.Status)
-	fmt.Println(resp.Header.Get("Content-Type"))
 
 	if resp.StatusCode != http.StatusOK {
 		fmt.Println("Error while fetching Weather Data. Status code: ", resp.Status)
