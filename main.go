@@ -126,8 +126,6 @@ func intAt(values []int, index int) int {
 
 func main() {
 
-	// TODO Improve API error handling and response validation.
-
 	location := flag.String("location", "", "Location to search for")
 	hoursToShow := flag.Int("hours", 24, "Number of hours to show")
 	countryCode := flag.String("country", "", "Country code to search for")
@@ -138,7 +136,7 @@ func main() {
 	fmt.Println("Hours: ", *hoursToShow)
 	fmt.Println("Country: ", *countryCode)
 
-	if *hoursToShow < 0 || *hoursToShow > 24*7 {
+	if *hoursToShow < 1 || *hoursToShow > 24*7 {
 		fmt.Println("Invalid number of hours")
 		return
 	}
@@ -184,7 +182,7 @@ func main() {
 		}
 	}
 
-	var geoRespone *http.Response
+	var geoResponse *http.Response
 
 	// Escape the location and country code because they cannot fetch chars like "ö"
 	*countryCode = url.QueryEscape(strings.ToLower(*countryCode))
@@ -193,7 +191,7 @@ func main() {
 	if len(splits) == 2 || *countryCode != "" {
 		geoUrl := fmt.Sprintf(LocationApiServerWithCountryCode, *location, *countryCode, os.Getenv("GEOAPIFY_API_KEY"))
 		fmt.Println(geoUrl)
-		geoRespone, err = http.Get(geoUrl)
+		geoResponse, err = http.Get(geoUrl)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -201,21 +199,25 @@ func main() {
 
 	} else {
 		geoUrl := fmt.Sprintf(LocationApiServer, *location, os.Getenv("GEOAPIFY_API_KEY"))
-		geoRespone, err = http.Get(geoUrl)
+		geoResponse, err = http.Get(geoUrl)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 	}
 
-	geoBody, err := io.ReadAll(geoRespone.Body)
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-	}(geoRespone.Body)
+	if geoResponse.StatusCode != http.StatusOK {
+		fmt.Println("Error while fetching Geoapify Data. Status code: ", geoResponse.Status)
+		fmt.Println("Error: ", geoResponse.Body)
+		return
+	}
+
+	err = geoResponse.Body.Close()
+	if err != nil {
+		return
+	}
+
+	geoBody, err := io.ReadAll(geoResponse.Body)
 
 	if err != nil {
 		fmt.Println(err)
@@ -249,11 +251,11 @@ func main() {
 		indexInput := strings.TrimSpace(scanner.Text())
 		index, err := strconv.Atoi(indexInput)
 		if err != nil {
-			fmt.Println("Invalid input")
+			fmt.Println("Invalid input: Non Integer")
 			return
 		}
 		if index < 0 || index >= len(geoapifyResponse.Results) {
-			fmt.Println("Invalid input")
+			fmt.Println("Invalid input: Out of range")
 			return
 		}
 		t := geoapifyResponse.Results[index]
@@ -289,6 +291,12 @@ func main() {
 	fmt.Println(resp.Status)
 	fmt.Println(resp.Header.Get("Content-Type"))
 
+	if resp.StatusCode != http.StatusOK {
+		fmt.Println("Error while fetching Weather Data. Status code: ", resp.Status)
+		fmt.Println("Error: ", resp.Body)
+		return
+	}
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println(err)
@@ -299,6 +307,9 @@ func main() {
 
 	var weatherResponse WeatherResponse
 	err = json.Unmarshal(body, &weatherResponse)
+	if err != nil {
+		fmt.Println("Error while encoding Weather response to JSON: ", err)
+	}
 	fmt.Println(weatherResponse.Current)
 	fmt.Println()
 	fmt.Println(weatherResponse.Hourly)
