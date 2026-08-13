@@ -151,5 +151,4 @@ Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag         
 ## Possible next steps
 
 - Translate WMO weather codes into readable descriptions.
-- Add command-line flags for location, forecast length and output style.
 - Improve API error handling and response validation.
