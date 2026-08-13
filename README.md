@@ -53,7 +53,7 @@ created in the Geoapify dashboard.
 
 ## Running the application
 
-Clone the repository and change into its directory:
+Clone the repository and change it into its directory:
 
 ```bash
 git clone <repository-url>
@@ -88,11 +88,11 @@ asks for the corresponding index.
 
 The application supports the following flags:
 
-| Flag | Default | Description |
-| --- | --- | --- |
-| `-location` | empty | Location to search for. If omitted, the application asks for it interactively. |
-| `-country` | empty | Two-letter country code used to restrict the location search, for example `DE`. |
-| `-hours` | `24` | Number of forecast hours to display. Allowed values are `1` to `168` (seven days). |
+| Flag        | Default | Description                                                                        |
+|-------------|---------|------------------------------------------------------------------------------------|
+| `-location` | empty   | Location to search for. If omitted, the application asks for it interactively.     |
+| `-country`  | empty   | Two-letter country code used to restrict the location search, for example `DE`.    |
+| `-hours`    | `24`    | Number of forecast hours to display. Allowed values are `1` to `168` (seven days). |
 
 Use `-h` to display the available flags:
 
