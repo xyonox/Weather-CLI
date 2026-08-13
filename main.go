@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -125,8 +126,6 @@ func intAt(values []int, index int) int {
 
 func main() {
 
-	// TODO cli flags
-
 	location := flag.String("location", "", "Location to search for")
 	hoursToShow := flag.Int("hours", 24, "Number of hours to show")
 	countryCode := flag.String("country", "", "Country code to search for")
@@ -184,18 +183,22 @@ func main() {
 
 	var geoRespone *http.Response
 
+	// Escape the location and country code because they cannot fetch chars like "ö"
+	*countryCode = url.QueryEscape(strings.ToLower(*countryCode))
+	*location = url.QueryEscape(*location)
+
 	if len(splits) == 2 || *countryCode != "" {
-		url := fmt.Sprintf(LocationApiServerWithCountryCode, *location, *countryCode, os.Getenv("GEOAPIFY_API_KEY"))
-		fmt.Println(url)
-		geoRespone, err = http.Get(url)
+		geoUrl := fmt.Sprintf(LocationApiServerWithCountryCode, *location, *countryCode, os.Getenv("GEOAPIFY_API_KEY"))
+		fmt.Println(geoUrl)
+		geoRespone, err = http.Get(geoUrl)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
 	} else {
-		url := fmt.Sprintf(LocationApiServer, *location, os.Getenv("GEOAPIFY_API_KEY"))
-		geoRespone, err = http.Get(url)
+		geoUrl := fmt.Sprintf(LocationApiServer, *location, os.Getenv("GEOAPIFY_API_KEY"))
+		geoRespone, err = http.Get(geoUrl)
 		if err != nil {
 			fmt.Println(err)
 			return
@@ -254,15 +257,15 @@ func main() {
 
 	fmt.Println("Searching for weather:")
 
-	url := fmt.Sprintf(WeatherApiServer,
+	weatherUrl := fmt.Sprintf(WeatherApiServer,
 		finallyResult.Latitude,
 		finallyResult.Longitude,
 		*hoursToShow,
 	)
 
-	fmt.Println(url)
+	fmt.Println(weatherUrl)
 
-	resp, err := http.Get(url)
+	resp, err := http.Get(weatherUrl)
 	if err != nil {
 		fmt.Println(err)
 		return
