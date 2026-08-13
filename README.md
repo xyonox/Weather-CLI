@@ -15,6 +15,8 @@ The project was created as a learning project for:
 
 - Search for a location by name
 - Optionally restrict the search with a two-letter country code
+- Provide the location and country code with command-line flags
+- Choose the number of forecast hours with a command-line flag (1–168)
 - Select a location when the geocoder returns multiple results
 - Display current weather conditions
 - Display an hourly forecast for the next 24 hours
@@ -82,6 +84,44 @@ country code separated by `, `:
 If multiple locations are found, the application prints a numbered list and
 asks for the corresponding index.
 
+### Command-line flags
+
+The application supports the following flags:
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `-location` | empty | Location to search for. If omitted, the application asks for it interactively. |
+| `-country` | empty | Two-letter country code used to restrict the location search, for example `DE`. |
+| `-hours` | `24` | Number of forecast hours to display. Allowed values are `1` to `168` (seven days). |
+
+Use `-h` to display the available flags:
+
+```bash
+go run . -h
+```
+
+Examples:
+
+```bash
+# Search for Cologne and show the default 24-hour forecast
+go run . -location "Köln"
+
+# Restrict the search to Germany
+go run . -location "Köln" -country DE
+
+# Show a 48-hour forecast
+go run . -location "Berlin" -country DE -hours 48
+```
+
+The flags can also be used with the compiled binary:
+
+```bash
+./weather-cli -location "München" -country DE -hours 12
+```
+
+If `-location` is omitted, `-country` and `-hours` are still used while the
+location is entered interactively.
+
 ## Building a binary
 
 Create an executable with:
@@ -139,7 +179,7 @@ Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag         
 
 ## Current limitations
 
-- The application only provides a 24-hour forecast.
+- The application provides a forecast for up to seven days (168 hours).
 - WMO weather codes are displayed as numbers and are not translated into
   descriptions such as "sunny" or "rain".
 - API errors and malformed API responses are only handled partially.
