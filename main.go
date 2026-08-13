@@ -126,6 +126,8 @@ func intAt(values []int, index int) int {
 
 func main() {
 
+	// TODO Improve API error handling and response validation.
+
 	location := flag.String("location", "", "Location to search for")
 	hoursToShow := flag.Int("hours", 24, "Number of hours to show")
 	countryCode := flag.String("country", "", "Country code to search for")
@@ -146,6 +148,7 @@ func main() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found")
+		return
 	}
 	apiKey := os.Getenv("GEOAPIFY_API_KEY")
 	if apiKey == "" {
@@ -210,6 +213,7 @@ func main() {
 		err := Body.Close()
 		if err != nil {
 			fmt.Println(err)
+			return
 		}
 	}(geoRespone.Body)
 
@@ -222,6 +226,10 @@ func main() {
 	var finallyResult GeoapifyResult
 
 	err = json.Unmarshal(geoBody, &geoapifyResponse)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println("Found the following locations:")
 	for key, result := range geoapifyResponse.Results {
