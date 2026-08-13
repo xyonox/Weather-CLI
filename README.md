@@ -19,6 +19,7 @@ The project was created as a learning project for:
 - Choose the number of forecast hours with a command-line flag (1–168)
 - Select a location when the geocoder returns multiple results
 - Display current weather conditions
+- Display readable weather descriptions such as sun, rain, showers and snow
 - Display an hourly forecast for the next 24 hours
 - Format timestamps as `YYYY-MM-DD HH:MM`
 - Use metric/European units:
@@ -157,13 +158,13 @@ Aktuell (2026-08-12 13:30)
   Temperatur:  28.0 °C (gefühlt  26.0 °C)
   Luftfeuchtigkeit:  18 %
   Niederschlag: 0.00 mm
-  Wettercode: WMO 2
+  Wetter: Bewölkt (WMO 2)
   Bewölkung:  56 %
   Wind: 10.8 km/h aus  64° (Böen 26.3 km/h)
 
 Vorhersage
-Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag                 Wetter       Wind
-2026-08-12 14:00  28.7 °C (gefühlt 26.6 °C)   16 %        0 %      0.00 mm ...
+Zeit              Temperatur                  Feuchte  Regenwahrsch.  Niederschlag                                      Wetter        Wolken   Wind
+2026-08-12 14:00  28.7 °C (gefühlt 26.6 °C)   16 %        0 %      0.00 mm (Regen 0.00, Schauer 0.00, Schnee 0.00 cm)  Sonnenschein     0 %  Wind 10.8 km/h aus  64° (Böen 26.3 km/h)
 ```
 
 ## Project structure
@@ -180,14 +181,8 @@ Zeit              Temperatur       Feuchte  Regenwahrsch.  Niederschlag         
 ## Current limitations
 
 - The application provides a forecast for up to seven days (168 hours).
-- WMO weather codes are displayed as numbers and are not translated into
-  descriptions such as "sunny" or "rain".
 - API errors and malformed API responses are only handled partially.
 - The application requires a Geoapify API key for every location search.
 - There are currently no automated tests.
 - The forecast output is intentionally wide and is best viewed in a terminal
   window with sufficient horizontal space.
-
-## Possible next steps
-
-- Translate WMO weather codes into readable descriptions.
