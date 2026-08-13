@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -15,7 +16,7 @@ import (
 )
 
 const (
-	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&forecast_hours=24&timezone=auto"
+	WeatherApiServer                 = "https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&hourly=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,precipitation,rain,showers,snowfall,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,cloud_cover,wind_speed_10m,wind_direction_10m,wind_gusts_10m&forecast_hours=%v&timezone=auto"
 	LocationApiServer                = "https://api.geoapify.com/v1/geocode/search?text=%v&format=json&apiKey=%v"
 	LocationApiServerWithCountryCode = "https://api.geoapify.com/v1/geocode/search?text=%v&filter=countrycode:%v&format=json&apiKey=%v"
 )
@@ -123,6 +124,19 @@ func intAt(values []int, index int) int {
 }
 
 func main() {
+
+	// TODO cli flags
+
+	location := flag.String("location", "", "Location to search for")
+	hoursToShow := flag.Int("hours", 24, "Number of hours to show")
+	countryCode := flag.String("country", "", "Country code to search for")
+
+	flag.Parse()
+
+	fmt.Println("Location: ", *location)
+	fmt.Println("Hours: ", *hoursToShow)
+	fmt.Println("Country: ", *countryCode)
+
 	fmt.Println("---------------------- Weather CLI ----------------------")
 
 	err := godotenv.Load()
@@ -135,6 +149,13 @@ func main() {
 		return
 	}
 
+	var input string
+	var splits []string
+
+	if *location != "" {
+
+	}
+
 	fmt.Println("Enter a location: ")
 	fmt.Print("> ")
 	scanner := bufio.NewScanner(os.Stdin)
@@ -144,11 +165,14 @@ func main() {
 		return
 	}
 
-	input := strings.TrimSpace(scanner.Text())
+	input = strings.TrimSpace(scanner.Text())
 
 	fmt.Printf("\nSearching for: %v\n\n", input)
 
-	splits := strings.SplitN(strings.ToLower(input), ", ", 2)
+	splits = strings.SplitN(strings.ToLower(input), ", ", 2)
+
+	*countryCode = strings.ToUpper(splits[0])
+	*location = strings.TrimSpace(splits[1])
 
 	var geoRespone *http.Response
 
@@ -214,7 +238,11 @@ func main() {
 
 	fmt.Println("Searching for weather:")
 
-	url := fmt.Sprintf(WeatherApiServer, finallyResult.Latitude, finallyResult.Longitude)
+	url := fmt.Sprintf(WeatherApiServer,
+		finallyResult.Latitude,
+		finallyResult.Longitude,
+		*hoursToShow,
+	)
 
 	fmt.Println(url)
 
